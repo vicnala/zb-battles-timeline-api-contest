@@ -65,7 +65,7 @@
   </style>
 
   <script type="text/babel">
-    var timeline, items = new vis.DataSet();
+    var timeline, items = new vis.DataSet(), userDecks = [];
 
     var playerId = function(id){
       var splited = id.split('_');
@@ -82,6 +82,19 @@
       return response.json();
     })
     .then(function(dataMatches) {
+
+
+      // Promise.all(dataMatches.matches.map(match => {
+      //   return new Promise(resolve => {
+      //     console.log(match.player1_id, match.player1_deck_id);
+      //     fetch(`https://api.loom.games/zb/v1/decks?user_id=${match.player1_id}&deck_id=${match.player1_deck_id}`)
+      //     .then(response => response.json())
+      //     .then(p1deck => resolve(p1deck));
+      //   });
+      // })).then(values => {
+      //   console.log(values);
+      // });
+
 
       dataMatches.matches.forEach((match, index) => {
 
@@ -141,7 +154,10 @@
       },
       render: function() {
         return <div>
-          <a href="https://github.com/you"><img width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
+          <a href="https://github.com/you">
+            <img width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" className="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1">
+            </img>
+          </a>
           <img src="https://loom.games/img/zbg-logo.7a0e8131.png" alt="loom network" className="logo"></img>
           <div id="visualization"></div>
         </div>
