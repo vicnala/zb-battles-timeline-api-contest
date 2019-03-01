@@ -17,6 +17,7 @@
 
   <style media="screen">
   body {
+    margin: 0;
     height:100vh;
     font-family: sans-serif;
     font-size: 10pt;
@@ -29,8 +30,13 @@
     margin-left: auto;
     margin-right: auto;
     padding-bottom: 10px;
+    padding-top: 10px;
     max-height: 120px;
     height: 50%;
+  }
+
+  .timeline {
+    padding: 10px;
   }
 
   .crown {
@@ -55,6 +61,13 @@
     margin-left: auto;
     margin-right: auto;
     min-width: 40px;
+  }
+
+  .forkme {
+    top: 0;
+    right: 0;
+    position: absolute;
+    overflow: hidden;
   }
 
   #visualization {
@@ -153,9 +166,9 @@
         // return initTimeline();
       },
       render: function() {
-        return <div>
+        return <div className="timeline">
           <a href="https://github.com/you">
-            <img width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" className="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1">
+            <img width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" className="forkme" alt="Fork me on GitHub" data-recalc-dims="1">
             </img>
           </a>
           <img src="https://loom.games/img/zbg-logo.7a0e8131.png" alt="loom network" className="logo"></img>
