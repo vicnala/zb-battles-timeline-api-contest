@@ -99,6 +99,7 @@
     };
 
     var addMatch = (match) => {
+      if (items.get(match.id)) return;
       items.add({
         p1: playerId(match.player1_id),
         p2: playerId(match.player2_id),
@@ -184,13 +185,13 @@
         .then(data => {
           if (data.matches.length) {
             // update current
-            if (page) currentPage = p;
+            if (page && data.matches.length >= 100) currentPage = p;
             // add matches
             data.matches.forEach(match => addMatch(match));
             // enable drag
             options.moveable = true;
             timeline.setOptions(options);
-            console.log('page', p, 'loaded');
+            console.log('page', p, 'loaded', data.matches.length);
           }
           this.setState(() => ({ isLoading: false }));
         });
@@ -218,7 +219,9 @@
             <img width='149' height='149' src='https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149' className='forkme' alt='Fork me on GitHub' data-recalc-dims='1'>
             </img>
           </a>
-          <img src='https://loom.games/img/zbg-logo.7a0e8131.png' alt='loom network' className='logo'></img>
+          <a href='https://loom.games'>
+            <img src='https://loom.games/img/zbg-logo.7a0e8131.png' alt='loom network' className='logo'></img>
+          </a>
           <div id='visualization'></div>
         </div>
       }
