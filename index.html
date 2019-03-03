@@ -1,27 +1,27 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <meta charset="utf-8">
+  <meta charset='utf-8'>
   <title>ZB Battles Timeline</title>
-  <link rel="icon" href="https://loom.games/favicon.ico">
+  <link rel='icon' href='https://loom.games/favicon.ico'>
 </head>
 <body>
   <div id='root'></div>
   <!-- React.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react-dom.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react-dom.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js'></script>
   <!-- Vis.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js'></script>
+  <link href='https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css' rel='stylesheet' type='text/css' />
 
-  <style media="screen">
+  <style media='screen'>
   body {
     margin: 0;
     height:100vh;
     font-family: sans-serif;
     font-size: 10pt;
-    background-image: url("https://loom.games/img/hero-bg.ab892529.png");
+    background-image: url('https://loom.games/img/hero-bg.ab892529.png');
     background-size:auto 100% 100%;
   }
 
@@ -77,10 +77,23 @@
   }
   </style>
 
-  <script type="text/babel">
-    var timeline, items = new vis.DataSet(), userDecks = [];
+  <script type='text/babel'>
+    var timeline, items = new vis.DataSet(), userDecks = [], tlStart, startPage,
+      currentPage;
 
-    var playerId = function(id){
+    // specify timeline options
+    var options = {
+      orientation: 'top',
+      editable: false,
+      template: (item, element) => {
+        if (!item) { return }
+        ReactDOM.unmountComponentAtNode(element);
+        return ReactDOM.render(<ItemTemplate item={item} />, element);
+      },
+      moveable: true
+    }
+
+    var playerId = (id) => {
       var splited = id.split('_');
       if (splited[1]) {
         var end = splited[1].substr(splited[1].length-4, 4);
@@ -89,49 +102,92 @@
       }
     };
 
-    fetch('https://api.loom.games/zb/v1/matches')
-    // fetch('http://localhost:8000/matches.json')       // XXX
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(dataMatches) {
+    var addMatch = (match) => {
+      items.add({
+        p1: playerId(match.player1_id),
+        p2: playerId(match.player2_id),
+        wr: playerId(match.winner_id) || '',
+        id: match.id,
+        match: `${match.id}`,
+        start: new Date(match.created_at),
+        end: new Date(match.updated_at)
+      });
+    };
 
+    var fetchpage = (page) => {
+      const p = page ? page : startPage;
+      options.moveable = false;
+      timeline.setOptions(options);
+      console.log('loading page', p);
+      fetch(`https://api.loom.games/zb/v1/matches?page=${p}`)
+      .then(response => response.json())
+      .then(dataMatches => {
+        if (dataMatches.matches.length) {
+          // update current
+          if (page) currentPage = p;
+        }
+        dataMatches.matches.forEach(match => {
+          addMatch(match);
+          options.moveable = true;
+          timeline.setOptions(options);
+        });
+        console.log('page', startPage, 'loaded');
+      });
+    };
+
+    var initTimeline = () => {
+      var container = document.getElementById('visualization');
+      timeline = new vis.Timeline(container, items, options);
+
+      timeline.on('rangechanged', (props) => {
+        if (!tlStart) tlStart = props.start;
+        else {
+          if (props.start < tlStart) {
+            tlStart =  props.start;
+            startPage = startPage - 1;
+            fetchpage();
+          }
+        }
+
+      });
+    }
+
+    console.log('init');
+    fetch('https://api.loom.games/zb/v1/matches?page=1')
+    .then(response => response.json())
+    .then(dataMatches => {
+      // set startPage
+      startPage = Math.floor(dataMatches.total / dataMatches.limit);
+      currentPage = startPage;
+      // fetch startPage
+      fetch(`https://api.loom.games/zb/v1/matches?page=${startPage}`)
+      .then(response => response.json())
+      .then(dataMatches => {
+        dataMatches.matches.forEach(match => {
+          addMatch(match);
+        });
+        console.log('page', startPage, 'loaded');
+        initTimeline();
+      });
 
       // Promise.all(dataMatches.matches.map(match => {
       //   return new Promise(resolve => {
       //     console.log(match.player1_id, match.player1_deck_id);
-      //     fetch(`https://api.loom.games/zb/v1/decks?user_id=${match.player1_id}&deck_id=${match.player1_deck_id}`)
-      //     .then(response => response.json())
-      //     .then(p1deck => resolve(p1deck));
+      //     // fetch(`https://api.loom.games/zb/v1/decks?user_id=${match.player1_id}&deck_id=${match.player1_deck_id}`)
+      //     // .then(response => response.json())
+      //     // .then(p1deck => resolve(p1deck));
       //   });
       // })).then(values => {
       //   console.log(values);
       // });
-
-
-      dataMatches.matches.forEach((match, index) => {
-
-        const p1 = playerId(match.player1_id);
-        const p2 = playerId(match.player2_id);
-        const wr = playerId(match.winner_id);
-
-        // if (index > 10) return;   // XXX
-
-        // filter no winner
-        if (!wr) return;
-
-        items.add({
-          p1, p2, wr,
-          id: match.id,
-          match: `${match.id}`,
-          start: new Date(match.created_at),
-          end: new Date(match.updated_at)
-        });
-      });
-
-      initTimeline();
-
     });
+
+    setInterval( () => {
+      if (startPage > 1) {
+        console.log('fetch', currentPage + 1);
+        // fetchpage();
+      }
+    }, 10000);
 
     var ItemTemplate = React.createClass({
       render: function() {
@@ -140,46 +196,31 @@
           <div>
             <small>
               <div><i>{item.match}</i></div>
-              {item.p1} <span className="fire">🔥</span> {item.p2}
+              {item.p1} <span className='fire'>🔥</span> {item.p2}
             </small>
           </div>
-          <span className="crown">👑</span>
+          <span className='crown'>👑</span>
           <small>{item.wr}</small>
-          <span className="crown">👑</span>
+          <span className='crown'>👑</span>
         </div>
       }
     })
-    // specify options
-    var options = {
-      orientation: 'top',
-      editable: false,
-      template: function (item, element) {
-        if (!item) { return }
-        ReactDOM.unmountComponentAtNode(element);
-        return ReactDOM.render(<ItemTemplate item={item} />, element);
-      },
-      clickToUse: true
-    }
 
     var VisTimeline = React.createClass({
-      componentDidMount: function() {
+      componentDidMount: () => {
         // return initTimeline();
       },
-      render: function() {
-        return <div className="timeline">
-          <a href="https://github.com/vicnala/zb-battles-timeline-api-contest">
-            <img width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" className="forkme" alt="Fork me on GitHub" data-recalc-dims="1">
+      render: () => {
+        return <div className='timeline'>
+          <a href='https://github.com/vicnala/zb-battles-timeline-api-contest'>
+            <img width='149' height='149' src='https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149' className='forkme' alt='Fork me on GitHub' data-recalc-dims='1'>
             </img>
           </a>
-          <img src="https://loom.games/img/zbg-logo.7a0e8131.png" alt="loom network" className="logo"></img>
-          <div id="visualization"></div>
+          <img src='https://loom.games/img/zbg-logo.7a0e8131.png' alt='loom network' className='logo'></img>
+          <div id='visualization'></div>
         </div>
       }
     });
-    function initTimeline() {
-      var container = document.getElementById('visualization');
-      timeline = new vis.Timeline(container, items, options);
-    }
 
     ReactDOM.render(<VisTimeline />, document.getElementById('root'));
   </script>
