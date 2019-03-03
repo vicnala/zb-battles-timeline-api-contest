@@ -26,7 +26,6 @@
     background-image: url('https://loom.games/img/hero-bg.ab892529.png');
     background-size:auto 100% 100%;
   }
-
   .logo {
     display: block;
     margin-left: auto;
@@ -35,14 +34,12 @@
     padding-top: 10px;
     max-height: 120px;
   }
-
   .forkme {
     top: 0;
     right: 0;
     position: absolute;
     overflow: hidden;
   }
-
   .loading {
     position: absolute;
     top: 10;
@@ -51,20 +48,17 @@
     color: white;
     font-size: 12pt;
   }
-
   .crown {
     font-size: 16px;
     color: yellow;
     text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px red;
   }
-
   .fire {
     font-size: 12px;
     color: orange;
     font-weight: bold;
     text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px yellow;
   }
-
   .vis-item {
     color: white;
     border-color: #acacac;
@@ -80,11 +74,8 @@
   <script type='text/babel'>
     var timeline, items = new vis.DataSet(), userDecks = [], tlStart, startPage,
       currentPage;
-
+    // get the user locale
     var locale = navigator.language.split('-')[0];
-
-    console.log(locale);
-
     // specify timeline options
     var options = {
       locale,
@@ -139,8 +130,8 @@
           }
         </div>
       }
-    })
-
+    });
+    // this is the main react component
     var VisTimeline = React.createClass({
       getInitialState() {
         return { isLoading: true };
@@ -164,9 +155,8 @@
             console.log('page', startPage);
             this.initTimeline();
             this.setState(() => ({ isLoading: false }));
-
+            // move to now
             timeline.moveTo(new Date());
-
             // fetch next page
             setTimeout(() => this.fetchpage(currentPage + 1), 500);
             setInterval( () => {
@@ -204,7 +194,6 @@
           }
           this.setState(() => ({ isLoading: false }));
         });
-
       },
       initTimeline: function () {
         // setup a vis.js timeline
@@ -234,7 +223,6 @@
         </div>
       }
     });
-
     ReactDOM.render(<VisTimeline />, document.getElementById('root'));
   </script>
 </body>
