@@ -62,7 +62,6 @@
   .vis-item {
     color: white;
     border-color: #acacac;
-    /* background-color: #efefef; */
     background-image: linear-gradient(to right, #16222A, #3A6073 );
     box-shadow: 5px 5px 10px rgba(128,128,128, 0.3);
     margin-left: auto;
@@ -86,7 +85,8 @@
         ReactDOM.unmountComponentAtNode(element);
         return ReactDOM.render(<ItemTemplate item={item} />, element);
       },
-      moveable: true
+      moveable: true,
+      zoomMax: 5 * 24 * 60 * 60 * 1000
     }
 
     var playerId = (id) => {
@@ -165,9 +165,24 @@
                 // fetch next page
                 this.fetchpage(currentPage + 1);
               }
-            }, 10000);
+            }, 30000);
+
+            setInterval( () => {
+              if (startPage >= 1) {
+                // fetch next page
+                startPage = startPage - 1;
+                this.fetchpage(startPage);
+              }
+            }, 1000);
           });
         });
+
+        window.addEventListener('mousedown', this.pageClick, false);
+      },
+      pageClick: function (ev) {
+        if (ev.target.id) {
+          if (ev.target.id === 'go-now') timeline.moveTo(new Date ());
+        }
       },
       fetchpage: function (page) {
         const p = page ? page : startPage;
@@ -200,17 +215,6 @@
         // setup a vis.js timeline
         var container = document.getElementById('visualization');
         timeline = new vis.Timeline(container, items, options);
-        // check rangechanged event to load more data
-        timeline.on('rangechanged', (props) => {
-          if (!tlStart) tlStart = props.start;
-          else {
-            if (props.start < tlStart) {
-              tlStart =  props.start;
-              startPage = startPage - 1;
-              this.fetchpage();
-            }
-          }
-        });
       },
       render: function () {
         return <div className='timeline'>
@@ -219,9 +223,7 @@
             <img width='149' height='149' src='https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149' className='forkme' alt='Fork me on GitHub' data-recalc-dims='1'>
             </img>
           </a>
-          <a href='https://loom.games'>
-            <img src='https://loom.games/img/zbg-logo.7a0e8131.png' alt='loom network' className='logo'></img>
-          </a>
+            <img id='go-now' src='https://loom.games/img/zbg-logo.7a0e8131.png' title='Click here to go to current time' className='logo'></img>
           <div id='visualization'></div>
         </div>
       }
